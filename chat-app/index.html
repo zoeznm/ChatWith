@@ -1,0 +1,76 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Application</title>
+    <style>
+        /* 기본 스타일 추가 */
+        ul {
+            list-style-type: none;
+        }
+        li {
+            padding: 8px;
+        }
+    </style>
+</head>
+<body>
+  <div id="username-form">
+      <input id="username" placeholder="Enter your name" autocomplete="off" />
+      <button id="set-username">Set Username</button>
+  </div>
+  <div id="room-selection" style="display: none;">
+      <button onclick="joinRoom('Room1')">Room 1</button>
+      <button onclick="joinRoom('Room2')">Room 2</button>
+  </div>
+  <ul id="messages"></ul>
+  <form id="form" action="">
+    <label for="input">Enter text:</label>
+    <input id="input" autocomplete="off" />
+    <button type="submit">Send</button>
+  </form>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script>
+      const socket = io();
+      const usernameForm = document.getElementById('username-form');
+      const usernameInput = document.getElementById('username');
+      const setUsernameButton = document.getElementById('set-username');
+
+      // 사용자 이름 설정
+      setUsernameButton.addEventListener('click', () => {
+          const username = usernameInput.value;
+          if (username) {
+              socket.emit('setUsername', username);
+              usernameForm.style.display = 'none'; // 이름 입력폼 숨김
+              document.getElementById('room-selection').style.display = 'block'; // 방 선택 폼 보이기
+          }
+      });
+
+      function joinRoom(room) {
+          socket.emit('joinRoom', room); // 선택한 방으로 이동
+          document.getElementById('room-selection').style.display = 'none'; // 방 선택 폼 숨김
+      }
+
+      const form = document.getElementById('form');
+      const input = document.getElementById('input');
+      const messages = document.getElementById('messages');
+
+      form.addEventListener('submit', function(e) {
+          e.preventDefault();
+          if (input.value) {
+              socket.emit('chatMessage', input.value); // 메시지 전송
+              input.value = '';
+          }
+      });
+
+      socket.on('chatMessage', function(msg) {
+          const item = document.createElement('li');
+          item.textContent = msg; // 수신한 메시지 표시
+          messages.appendChild(item);
+          window.scrollTo(0, document.body.scrollHeight); // 스크롤 아래로 이동
+      });
+  </script>
+</body>
+</html>
